@@ -1,0 +1,142 @@
+version: '3'
+
+tasks:
+  ######################################################################
+  # Setup tasks
+  ######################################################################
+  setup-build-env:
+    desc: "Sets up the entire build environment so that it is possible to run pip install ."
+    cmds:
+      - task: setup-python-venv
+      - task: setup-vendor-folder
+      - task: meson-setup
+      - task: setup-poetry-project
+
+  setup-python-venv:
+    desc: "Installs all packages needed for the virtual environment in src/main/python"
+    cmds:
+      - task: check-python-version
+      - powershell -Command "python -m venv .venv"
+      - powershell -Command ".venv/Scripts/pip.exe install numpy==1.26.4"
+      - powershell -Command ".venv/Scripts/pip.exe install cx_Freeze==7.2.8 poetry==2.0.0 PyQt5==5.15.11 meson ninja"
+
+  setup-vendor-folder:
+    desc: "Sets up the vendor folder by cloning the PyMOL github repo."
+    cmds:
+      - git clone https://github.com/schrodinger/pymol-open-source.git ./vendor/pymol-open-source
+      - task: checkout-latest-stable-pymol-commit
+      - cmd /c "xcopy .\vendor\pymol-open-source\include .\includes  /e /h /c /i /y"
+      - cmd /c ".\.venv\Scripts\python.exe .\scripts\python\create_generated_files.py"
+
+  setup-poetry-project:
+    desc: "Uses the poetry executable to setup a fresh poetry project called pymol."
+    cmds:
+      - task: check-poetry-installation
+      - cmd /c ".\.venv\Scripts\poetry.exe new pymol"
+      # Delete all files automatically created by poetry
+      - cmd /c "if exist .\pymol\pymol rmdir /s /q .\pymol\pymol"
+      - cmd /c "if exist .\pymol\tests rmdir /s /q .\pymol\tests"
+      - cmd /c "if exist .\pymol\pyproject.toml del .\pymol\pyproject.toml"
+      - cmd /c "if exist .\pymol\README.md del .\pymol\README.md"
+      # Copy PyMOL python sources, the custom pyproject.toml and the build_win_exe.py
+      - task: copy-pymol-python-sources
+      - cmd /c "copy .\pyproject.toml .\pymol\pyproject.toml"
+      - cmd /c "copy .\scripts\python\build_win_exe.py .\pymol\build_win_exe.py"
+
+  copy-pymol-python-sources:
+    desc: "Copies all python files required for the wheel file."
+    cmds:
+      - cmd /c "xcopy .\vendor\pymol-open-source\modules .\pymol  /e /h /c /i /y"
+      - cmd /c "xcopy .\vendor\pymol-open-source\data .\pymol\pymol\data  /e /h /c /i /y"
+      - cmd /c "copy .\vendor\pymol-open-source\README.md .\pymol\README.md"
+      - cmd /c "copy .\vendor\pymol-open-source\LICENSE .\pymol\LICENSE"
+      - cmd /c "copy .\edited\pymol\__init__.py .\pymol\pymol\__init__.py"
+      - cmd /c "copy .\edited\pmg_qt\pymol_qt_gui.py .\pymol\pmg_qt\pymol_qt_gui.py"
+      - cmd /c "copy .\edited\pymol\data\pymol\base.css .\pymol\pymol\data\pymol\base.css"
+      - cmd /c "copy .\alternative_design\splash.png .\pymol\pymol\data\pymol\splash.png"
+      - cmd /c "copy .\alternative_design\logo.png .\pymol\pymol\data\pymol\icons\alt_logo.png"
+
+  setup-unstable-build-folder:
+    desc: "Sets up the unstable build folder."
+    cmds:
+      - cmd /c "if not exist .\.unstable_build\vendor mkdir .\.unstable_build\vendor"
+      - cmd /c "if not exist .\.unstable_build\includes mkdir .\.unstable_build\includes"
+      - cmd /c "if not exist .\.unstable_build\libx64 mkdir .\.unstable_build\libx64"
+      - git clone https://github.com/schrodinger/pymol-open-source.git ./.unstable_build/vendor/pymol-open-source
+      - cmd /c "xcopy .\includes .\.unstable_build\includes  /e /h /c /i"
+      - cmd /c "xcopy .\libx64 .\.unstable_build\libx64  /e /h /c /i"
+      - cmd /c "copy .\meson.build .\.unstable_build\meson.build"
+      - task: check-python-version
+      - powershell -Command "python -m venv .\.unstable_build\.venv"
+      - powershell -Command ".\.unstable_build\.venv\Scripts\pip.exe install numpy==1.26.4"
+
+  meson-setup:
+    desc: "Sets up the meson project and buildDir folder."
+    cmds:
+      - cmd /c ".\.venv\Scripts\meson.exe setup buildDir --buildtype=release --backend=vs2022"
+
+  ######################################################################
+  # Build tasks
+  ######################################################################
+  poetry-build:
+    dir: .\pymol
+    desc: "Builds the poetry project with pre-built tasks."
+    cmds:
+      - task: check-poetry-installation
+      # This should be changed so that the _cmd module gets only copied a single time!
+      - cmd /c "copy ..\pre-built\_cmd.cp311-win_amd64.pyd .\pymol\_cmd.cp311-win_amd64.pyd"
+      - cmd /c "if exist ..\buildDir\_cmd.cp311-win_amd64.pyd copy ..\buildDir\_cmd.cp311-win_amd64.pyd .\pymol\_cmd.cp311-win_amd64.pyd"
+      - cmd /c "..\.venv\Scripts\poetry.exe build"
+      - cmd /c "if exist ..\dist rmdir /s /q ..\dist"
+      - cmd /c "xcopy .\dist ..\dist  /e /h /c /i"
+      - cmd /c "if exist .\dist rmdir /s /q .\dist"
+
+  build-pymol-exe:
+    desc: "Builds PyMOL as .exe file"
+    dir: .\pymol
+    cmds:
+      - cmd /c "copy ..\scripts\python\build_win_exe.py .\build_win_exe.py"
+      - cmd /c "..\.venv\Scripts\python.exe .\build_win_exe.py"
+
+  build-all:
+    desc: "Builds all targets: the _cmd extension module the Python wheel file and the cx_freeze .exe file."
+    cmds:
+      - task: poetry-build
+      - task: build-pymol-exe
+
+  ######################################################################
+  # Extra tasks
+  ######################################################################
+  checkout-latest-stable-pymol-commit:
+    # Some commits break the build process therefore
+    # a specific commit has to be checked out
+    dir: .\vendor\pymol-open-source
+    cmds:
+      - git checkout 0313aeba9d75f464e4dddccc3bdbee71a5afb049
+
+  get-latest-pymol-commit:
+    dir: .\.unstable_build\vendor\pymol-open-source
+    cmds:
+      - git pull
+
+  create-alt-ico:
+    desc: "Creates the alternative Windows icon file for the .exe file."
+    cmds:
+      - cmd /c ".\scripts\convert_pymol_png_to_ico.bat"
+      - cmd /c "copy .\alternative_design\convert_to_ico\logo.ico .\alternative_design\logo.ico"
+
+  ######################################################################
+  # Check tasks
+  ######################################################################
+  check-python-version:
+    desc: "Check if the system Python version is 3.11.x"
+    cmds:
+      - python --version
+      - |
+        python -c "import sys; assert sys.version_info[:2] == (3, 11), 'Python 3.11.x is not installed'" || (
+          echo "Python 3.11.x is not installed. Please install it." && exit 1
+        )
+
+  # Checks if poetry is installed in the .venv under the root directory
+  check-poetry-installation:
+    - cmd /c "if not exist .\.venv\Scripts\poetry.exe echo ERROR Unable to find poetry.exe in .venv\Scripts! Check if it's installed."
