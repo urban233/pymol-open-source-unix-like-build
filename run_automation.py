@@ -32,7 +32,7 @@ PYTHON_EXECUTABLE = sys.executable  # This gives the current Python executable
 DEBUG = False
 
 
-class BuildWinExe:
+class BuildLinuxExe:
   """Contains the logic for building the Windows EXE file."""
 
   def __init__(self) -> None:
@@ -40,7 +40,7 @@ class BuildWinExe:
     self.src_path = pathlib.Path(PROJECT_ROOT_DIR / "pymol")
     self.pymol_data_path = pathlib.Path(PROJECT_ROOT_DIR / "pymol/pymol/data")
     self.build_script_filepath = pathlib.Path(
-      PROJECT_ROOT_DIR / "pymol", "build_win_exe.py"
+      PROJECT_ROOT_DIR / "pymol", "build_linux_exe.py"
     )
     self.license_filepath = pathlib.Path(PROJECT_ROOT_DIR / "pymol/LICENSE")
     self.readme_filepath = pathlib.Path(PROJECT_ROOT_DIR / "pymol/README.md")
@@ -50,7 +50,7 @@ class BuildWinExe:
     """Sets up a temporary build environment."""
     # <editor-fold desc="Path/Filepath definitions">
     tmp_build_script_filepath = pathlib.Path(
-      PROJECT_ROOT_DIR / "scripts/python", "build_win_exe.py"
+      PROJECT_ROOT_DIR / "scripts/python", "build_linux_exe.py"
     )
     tmp_vendor_pymol_path = pathlib.Path(
       PROJECT_ROOT_DIR / "vendor/pymol-open-source"
@@ -123,20 +123,35 @@ class BuildWinExe:
 
 def setup_dev_env() -> None:
   """Installs the dependencies needed for building the _cmd extension module."""
-  subprocess.run(["git", "clone", "https://github.com/microsoft/vcpkg.git", pathlib.Path("./vendor/vcpkg")])
-  subprocess.run(["chmod", "+x", r".\bootstrap-vcpkg.sh"], cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))
-  #subprocess.run([r".\bootstrap-vcpkg.sh"], cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))
-  subprocess.run([r".\bootstrap-vcpkg.sh"], shell=True, cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))
+  # <editor-fold desc="Setup pymol-open-source repository">
+  subprocess.run(["git", "clone", "https://github.com/schrodinger/pymol-open-source.git",
+                  pathlib.Path("./vendor/pymol-open-source")])
+  subprocess.run(["git", "checkout", "0313aeba9d75f464e4dddccc3bdbee71a5afb049"],
+                 cwd=pathlib.Path("./vendor/pymol-open-source"))
   subprocess.run(
-    [f"{pathlib.Path(PROJECT_ROOT_DIR / 'vendor/vcpkg' / 'vcpkg')}", "install", "--triplet=x64-linux"],
-    shell=True
-  )
+    [pathlib.Path("./.venv/bin/python3.11"), pathlib.Path("./scripts/python/create_generated_files.py")])
+  # </editor-fold>
+  # <editor-fold desc="Setup vcpkg package manager">
+  subprocess.run(["git", "clone", "https://github.com/microsoft/vcpkg.git", pathlib.Path("./vendor/vcpkg")])
+  subprocess.run(["chmod", "+x", r"./bootstrap-vcpkg.sh"], cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))
+  subprocess.run([r"./bootstrap-vcpkg.sh"], shell=True, cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))
+
+  if len(str(pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))) < 90:
+    print(f"Path of vcpkg is short enough. It contains {len(str(pathlib.Path(PROJECT_ROOT_DIR / 'vendor/vcpkg')))}")
+
+    subprocess.run(
+      [pathlib.Path(PROJECT_ROOT_DIR / 'vendor/vcpkg' / 'vcpkg'), "install", "--triplet=x64-linux"],
+      shell=True
+    )
+  else:
+    print("Warning the path of the vcpkg is too long! The vcpkg.exe cannot be used unless a shorter path is used!")
+  # </editor-fold>
 
 
-def build_win_exe() -> None:
-  """Builds the Windows EXE file using the BuildWinExe class."""
-  tmp_build_win_exe = BuildWinExe()
-  tmp_build_win_exe.build()
+def build_linux_exe() -> None:
+  """Builds the Windows EXE file using the BuildLinuxExe class."""
+  tmp_build_linux_exe = BuildLinuxExe()
+  tmp_build_linux_exe.build()
 
 
 def clean_install() -> None:
@@ -155,9 +170,71 @@ def clean_install() -> None:
 def build_wheel() -> None:
   """Builds the wheel file for the python PyMOL package."""
   # Run the command using subprocess.run
+  # <editor-fold desc="Path/Filepath definitions">
+  tmp_src_path = pathlib.Path(PROJECT_ROOT_DIR / "pymol")
+  tmp_src_pymol_data_path = pathlib.Path(PROJECT_ROOT_DIR / "pymol/pymol/data")
+  tmp_license_filepath = pathlib.Path(PROJECT_ROOT_DIR / "pymol/LICENSE")
+  tmp_readme_filepath = pathlib.Path(PROJECT_ROOT_DIR / "pymol/README.md")
+  tmp_vendor_pymol_path = pathlib.Path(
+    PROJECT_ROOT_DIR / "vendor/pymol-open-source"
+  )
+  tmp_pymol_python_src_path = pathlib.Path(
+    tmp_vendor_pymol_path / "modules"
+  )
+  tmp_pymol_data_path = pathlib.Path(
+    tmp_vendor_pymol_path / "data"
+  )
+  tmp_pymol_license_filepath = pathlib.Path(
+    tmp_vendor_pymol_path / "LICENSE"
+  )
+  tmp_pymol_readme_filepath = pathlib.Path(
+    tmp_vendor_pymol_path / "README.md"
+  )
+  tmp_edited_pmg_qt_filepath = pathlib.Path(
+    PROJECT_ROOT_DIR / "edited/pmg_qt" / "pymol_qt_gui.py"
+  )
+  tmp_edited_base_css_filepath = pathlib.Path(
+    PROJECT_ROOT_DIR / "edited/pymol/data/pymol", "base.css"
+  )
+  tmp_edited_init_py_filepath = pathlib.Path(
+    PROJECT_ROOT_DIR / "edited/pymol", "__init__.py"
+  )
+  tmp_alternative_splash_screen_filepath = pathlib.Path(
+    PROJECT_ROOT_DIR / "alternative_design" / "splash.png"
+  )
+  # </editor-fold>
+  # <editor-fold desc="Copy operations">
+  if tmp_src_path.exists():
+    shutil.rmtree(tmp_src_path)
+  shutil.copytree(tmp_pymol_python_src_path, tmp_src_path)
+  shutil.copytree(tmp_pymol_data_path, tmp_src_pymol_data_path, dirs_exist_ok=True)
+  shutil.copy(tmp_pymol_license_filepath, tmp_license_filepath)
+  shutil.copy(tmp_pymol_readme_filepath, tmp_readme_filepath)
+  # <editor-fold desc="Custom file replacements">
+  shutil.copy(
+    tmp_edited_base_css_filepath,
+    pathlib.Path(tmp_pymol_data_path / "pymol", "base.css")
+  )
+  shutil.copy(
+    tmp_edited_pmg_qt_filepath,
+    pathlib.Path(tmp_src_path / "pmg_qt", "pymol_qt_gui.py")
+  )
+  shutil.copy(
+    tmp_edited_init_py_filepath,
+    pathlib.Path(tmp_src_path / "pymol", "__init__.py")
+  )
+  shutil.copy(
+    tmp_alternative_splash_screen_filepath,
+    pathlib.Path(tmp_src_path / "pymol/data/pymol", "splash.png")
+  )
+  # </editor-fold>
+  # </editor-fold>
   subprocess.run(
-    [PYTHON_EXECUTABLE, 'setup.py', 'sdist', 'bdist_wheel'],
-    stdout=sys.stdout, stderr=sys.stderr, text=True
+    [
+      PYTHON_EXECUTABLE,
+      "setup.py", "sdist", "bdist_wheel",
+    ],
+
   )
 
 
@@ -170,8 +247,8 @@ def main() -> None:
   install_parser.set_defaults(func=setup_dev_env)
   build_wheel_parser = subparsers.add_parser('build-wheel', help="Builds the wheel file.")
   build_wheel_parser.set_defaults(func=build_wheel)
-  build_win_exe_parser = subparsers.add_parser('build-win-exe', help="Builds the Windows EXE file.")
-  build_win_exe_parser.set_defaults(func=build_win_exe)
+  build_linux_exe_parser = subparsers.add_parser('build-linux-exe', help="Builds the linux executable file.")
+  build_linux_exe_parser.set_defaults(func=build_linux_exe)
   clean_install_parser = subparsers.add_parser('clean-install',
                                                help="Cleans the cmake-build-setup_py diretory and then runs the pip install . command.")
   clean_install_parser.set_defaults(func=clean_install)
