@@ -253,6 +253,7 @@ target_compile_options(_cmd PRIVATE ${ALL_COMP_ARGS})
 # Set Python paths manually
 #find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 set(Python3_EXECUTABLE "/usr/bin/python3.11")
+set(Python3_INCLUDE_DIR "/usr/include/python3.11")
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 set(SHARED_SUFFIX

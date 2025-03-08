@@ -165,7 +165,7 @@ def build_linux_exe() -> None:
 
 def clean_install() -> None:
   """Cleans the CMake build directory and then runs the complete build process."""
-  tmp_pip_executable = pathlib.Path(PROJECT_ROOT_DIR / ".venv/Scripts", "pip.exe")
+  tmp_pip_executable = pathlib.Path(PROJECT_ROOT_DIR / ".venv/bin", "pip")
   tmp_build_dir = pathlib.Path(PROJECT_ROOT_DIR / "cmake-build-setup_py")
 
   if tmp_build_dir.exists():

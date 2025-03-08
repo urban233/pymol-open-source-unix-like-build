@@ -7,20 +7,23 @@ import zipfile
 from cx_Freeze import Freezer, Executable
 
 FILE_ROOT_PATH = pathlib.Path(__file__).parent
+PROJECT_ROOT_PATH = FILE_ROOT_PATH.parent
 
 # Define the entry point of your application
 executable = Executable(
   script="pymol/__init__.py",  # Replace with your script name
   target_name="Open-Source-PyMOL",  # Optional: Set the name of the .exe file
   #base="Win32GUI",  # Uncomment to suppress command window
-  icon=pathlib.Path(FILE_ROOT_PATH.parent / "alternative_design" / "logo.ico")
+  icon=pathlib.Path(PROJECT_ROOT_PATH / "alternative_design" / "logo.ico")
 )
+
+# shared_libs = [pathlib.Path(PROJECT_ROOT_PATH / "pre-built/linux/lib_64" / tmp_lib) for tmp_lib in os.listdir(pathlib.Path(PROJECT_ROOT_PATH / "pre-built/linux/lib_64"))]
 
 # Create a freezer instance
 freezer = Freezer(
   executables=[executable],
   includes=[
-    "PyQt5.uic", "pymol.povray", "pymol.parser"
+    "PyQt5.uic", "pymol.povray", "pymol.parser", "uuid"
   ],
   excludes=[],  # Exclude unnecessary modules
   include_files=[],  # Include additional files

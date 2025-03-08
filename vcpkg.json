@@ -12,7 +12,6 @@
       "default-features": false
     },
     "opengl",
-    "netcdf-c",
-    "python3"
+    "netcdf-c"
   ]
 }
