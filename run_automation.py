@@ -132,19 +132,19 @@ def setup_dev_env() -> None:
     [pathlib.Path("./.venv/bin/python3.11"), pathlib.Path("./scripts/python/create_generated_files.py")])
   # </editor-fold>
   # <editor-fold desc="Setup vcpkg package manager">
-  subprocess.run(["git", "clone", "https://github.com/microsoft/vcpkg.git", pathlib.Path("./vendor/vcpkg")])
-  subprocess.run(["chmod", "+x", r"./bootstrap-vcpkg.sh"], cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))
-  subprocess.run([r"./bootstrap-vcpkg.sh"], shell=True, cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))
-
-  if len(str(pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))) < 90:
-    print(f"Path of vcpkg is short enough. It contains {len(str(pathlib.Path(PROJECT_ROOT_DIR / 'vendor/vcpkg')))}")
-
-    subprocess.run(
-      [pathlib.Path(PROJECT_ROOT_DIR / 'vendor/vcpkg' / 'vcpkg'), "install", "--triplet=x64-linux"],
-      shell=True
-    )
-  else:
-    print("Warning the path of the vcpkg is too long! The vcpkg.exe cannot be used unless a shorter path is used!")
+  # subprocess.run(["git", "clone", "https://github.com/microsoft/vcpkg.git", pathlib.Path("./vendor/vcpkg")])
+  # subprocess.run(["chmod", "+x", r"./bootstrap-vcpkg.sh"], cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))
+  # subprocess.run([r"./bootstrap-vcpkg.sh"], shell=True, cwd=pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))
+  #
+  # if len(str(pathlib.Path(PROJECT_ROOT_DIR / "vendor/vcpkg"))) < 90:
+  #   print(f"Path of vcpkg is short enough. It contains {len(str(pathlib.Path(PROJECT_ROOT_DIR / 'vendor/vcpkg')))}")
+  #
+  #   subprocess.run(
+  #     [pathlib.Path(PROJECT_ROOT_DIR / 'vendor/vcpkg' / 'vcpkg'), "install", "--triplet=x64-linux"],
+  #     shell=True
+  #   )
+  # else:
+  #   print("Warning the path of the vcpkg is too long! The vcpkg.exe cannot be used unless a shorter path is used!")
   # </editor-fold>
 
 
