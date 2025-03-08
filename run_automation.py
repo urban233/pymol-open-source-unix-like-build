@@ -79,8 +79,13 @@ class BuildLinuxExe:
     tmp_alternative_splash_screen_filepath = pathlib.Path(
       PROJECT_ROOT_DIR / "alternative_design" / "splash.png"
     )
+    tmp_alternative_logo_filepath = pathlib.Path(
+      PROJECT_ROOT_DIR / "alternative_design" / "logo.png"
+    )
     # </editor-fold>
     # <editor-fold desc="Copy operations">
+    if self.src_path.exists():
+      shutil.rmtree(self.src_path)
     shutil.copytree(tmp_pymol_python_src_path, self.src_path)
     shutil.copytree(tmp_pymol_data_path, self.pymol_data_path, dirs_exist_ok=True)
     shutil.copy(tmp_build_script_filepath, self.build_script_filepath)
@@ -102,6 +107,10 @@ class BuildLinuxExe:
     shutil.copy(
       tmp_alternative_splash_screen_filepath,
       pathlib.Path(self.src_path / "pymol/data/pymol", "splash.png")
+    )
+    shutil.copy(
+      tmp_alternative_logo_filepath,
+      pathlib.Path(self.src_path / "pymol/data/pymol/icons", "alt_logo.png")
     )
     # </editor-fold>
     # </editor-fold>

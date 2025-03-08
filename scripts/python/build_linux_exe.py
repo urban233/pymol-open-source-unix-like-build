@@ -20,7 +20,7 @@ executable = Executable(
 freezer = Freezer(
   executables=[executable],
   includes=[
-    "pymol.povray", "pymol.parser"
+    "PyQt5.uic", "pymol.povray", "pymol.parser"
   ],
   excludes=[],  # Exclude unnecessary modules
   include_files=[],  # Include additional files
