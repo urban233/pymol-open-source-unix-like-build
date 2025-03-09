@@ -21,6 +21,7 @@ import subprocess
 
 from setuptools import find_packages
 from setuptools import setup
+from setuptools.command.build import build
 from setuptools.command.build_ext import build_ext
 from setuptools.command.install import install
 import toml
@@ -31,28 +32,6 @@ PROJECT_VERSION = pyproject_toml["project"]["version"]
 
 PROJECT_ROOT_DIR = pathlib.Path(__file__).parent
 DEBUG = False  # Debug flag for not cleaning up certain build files.
-
-
-class CustomInstall(install):
-
-  def copy_pymol_python_sources(self) -> None:
-    """Copies the pymol python sources to the src/python directory."""
-    tmp_src_path = pathlib.Path(PROJECT_ROOT_DIR / "src/python")
-    tmp_pymol_python_src_path = pathlib.Path(PROJECT_ROOT_DIR / "vendor/pymol-open-source/modules")
-    if not tmp_src_path.exists():
-      tmp_src_path.mkdir(parents=True)
-    shutil.copytree(
-      tmp_pymol_python_src_path,
-      tmp_src_path
-    )
-
-  def run(self) -> None:
-    """Run method that gets executed if pip install is run."""
-    self.copy_pymol_python_sources()
-    self.run_command("build_ext")
-    super().run()
-    if not DEBUG:
-      shutil.rmtree(pathlib.Path(PROJECT_ROOT_DIR / "src"))
 
 
 class CMakeBuildExt(build_ext):
@@ -78,8 +57,8 @@ class CMakeBuildExt(build_ext):
     subprocess.check_call(["cmake", PROJECT_ROOT_DIR] + cmake_args, cwd=build_dir)
     subprocess.check_call(["cmake", "--build", build_dir, "--config", "Release"])
     shutil.copyfile(
-      pathlib.Path(PROJECT_ROOT_DIR / "cmake-build-setup_py/_cmd.cp311-win_amd64.pyd"),
-      pathlib.Path(PROJECT_ROOT_DIR / 'src/python/pymol/_cmd.cp311-win_amd64.pyd'),
+      pathlib.Path(PROJECT_ROOT_DIR / "cmake-build-setup_py/_cmd.cpython-311-x86_64-linux-gnu.so"),
+      pathlib.Path(PROJECT_ROOT_DIR / 'src/python/pymol/_cmd.cpython-311-x86_64-linux-gnu.so'),
     )
 
 
@@ -91,8 +70,7 @@ setup(
   package_data={"": ["*.*"], "pymol": ["*.*"]},
   ext_modules=[],  # Handled by CMake
   cmdclass={
-    "build_ext": CMakeBuildExt,
-    "install": CustomInstall
+    "build_ext": CMakeBuildExt
   },
   install_requires=[
     "numpy==1.26.4",

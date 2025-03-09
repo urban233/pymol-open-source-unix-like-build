@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-#set(VCPKG_TARGET_TRIPLET x64-windows-static)
+#set(VCPKG_TARGET_TRIPLET x64-unix-like-static)
 
 project(_cmd)
 
@@ -251,20 +251,18 @@ set(ALL_COMP_ARGS
 target_compile_options(_cmd PRIVATE ${ALL_COMP_ARGS})
 
 # Set Python paths manually
-#find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
-find_package(Python3 COMPONENTS Development REQUIRED)
+find_package(Python3 3.11 EXACT COMPONENTS Development REQUIRED)
 
-set(SHARED_SUFFIX
-        .cp311-win_amd64.pyd
-)
+set(SHARED_SUFFIX .cpython-311-x86_64-linux-gnu.so)
 set_target_properties(_cmd PROPERTIES SUFFIX ${SHARED_SUFFIX})
 
 target_compile_features(_cmd PRIVATE cxx_std_17)
 
 set_target_properties(_cmd PROPERTIES PREFIX "")
 
+set(Venv_Python_EXE ${CMAKE_SOURCE_DIR}/.venv/bin/python)
 execute_process(
-        COMMAND ${Python_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+        COMMAND ${Venv_Python_EXE} -c "import numpy; print(numpy.get_include())"
         OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -284,6 +282,7 @@ set (ALL_INC_DIR
         .venv/lib/python3.12/site-packages/numpy/core/include
         vcpkg_installed/x64-linux/include
         ${Python3_INCLUDE_DIRS}
+        ${NUMPY_INCLUDE_DIR}
 )
 target_include_directories(_cmd PUBLIC ${ALL_INC_DIR})
 
@@ -316,12 +315,17 @@ target_link_directories(_cmd PRIVATE ${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-lin
 #)
 target_link_libraries(
         _cmd PRIVATE
-        freetype opengl32
-        /home/ubuntu2404/projects/pymol-open-source-windows-build/vcpkg_installed/x64-linux/lib/libGLEW.a
-        PNG::PNG
-        /home/ubuntu2404/projects/pymol-open-source-windows-build/vcpkg_installed/x64-linux/lib/libxml2.a
-        netCDF::netcdf Python3::Python
+        freetype opengl32 GLEW PNG::PNG xml2 netCDF::netcdf Python3::Python
 )
+
+#target_link_libraries(
+#        _cmd PRIVATE
+#        freetype opengl32
+#        /home/ubuntu2404/projects/pymol-open-source-unix-like-build/vcpkg_installed/x64-linux/lib/libGLEW.a
+#        PNG::PNG
+#        /home/ubuntu2404/projects/pymol-open-source-unix-like-build/vcpkg_installed/x64-linux/lib/libxml2.a
+#        netCDF::netcdf Python3::Python
+#)
 
 
 set(ALL_DEF

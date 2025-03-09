@@ -18,21 +18,26 @@ To build the wheel file, follow these steps (the working directory is the reposi
 
 1. Set up the build environment by running:
    ```powershell
-   
+   python run_automation.py setup-dev-env
    ```
 
 2. Once the environment is set up and **activated**, build the wheel file with:
    ```powershell
-   python .\run_automation.py build-wheel 
+   python run_automation.py build-wheel 
    ```
     or if the environment is not activated run:
     ```powershell
-    .\.venv\bin\python.exe .\run_automation.py build-wheel
+    ./.venv/bin/python.exe run_automation.py build-wheel
     ```
 
 3. After the build process completes, you can find the generated wheel file in the `dist` folder located in the project root.
 
 Feel free to contribute or test the files as needed.
+
+## Requirements
+```shell
+sudo apt update -y && sudo apt-get install git build-essential python3.11-dev libglew-dev libpng-dev libfreetype6-dev libxml2-dev libmsgpack-dev python3-pyqt5.qtopengl libglm-dev libnetcdf-dev autoconf
+```
 
 ## Acknowledgements
 **Schrödinger** for being the driving force behind the continued development of PyMOL after Warren's passing, ensuring that the open-source version remained alive and well. 
