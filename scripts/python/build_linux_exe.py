@@ -10,7 +10,7 @@ FILE_ROOT_PATH = pathlib.Path(__file__).parent
 # Define the entry point of your application
 executable = Executable(
   script="pymol/__init__.py",  # Replace with your script name
-  target_name="Open-Source-PyMOL.exe",  # Optional: Set the name of the .exe file
+  target_name="Open-Source-PyMOL",  # Optional: Set the name of the .exe file
   #base="Win32GUI",  # Uncomment to suppress command window
   icon=pathlib.Path(FILE_ROOT_PATH.parent / "alternative_design" / "logo.ico")
 )
@@ -43,28 +43,28 @@ def remove_dist_info_folders(directory: pathlib.Path):
 
 if __name__ == '__main__':
   freezer.freeze()
-  with zipfile.ZipFile(pathlib.Path(f"{FILE_ROOT_PATH}/build/exe.win-amd64-3.11/lib/library.zip"), 'r') as zip_ref:
-    zip_ref.extractall(pathlib.Path(f"{FILE_ROOT_PATH}/build/exe.win-amd64-3.11/lib"))
-  _CMD_FROM_BUILD_DIR = pathlib.Path(FILE_ROOT_PATH.parent / "buildDir" / "_cmd.cpython-311-x86_64-linux-gnu.so")
+  with zipfile.ZipFile(pathlib.Path(f"{FILE_ROOT_PATH}/build/exe.linux-x86_64-3.11/lib/library.zip"), 'r') as zip_ref:
+    zip_ref.extractall(pathlib.Path(f"{FILE_ROOT_PATH}/build/exe.linux-x86_64-3.11/lib"))
+  _CMD_FROM_BUILD_DIR = pathlib.Path(FILE_ROOT_PATH.parent / "cmake-build-release" / "_cmd.cpython-311-x86_64-linux-gnu.so")
   _CMD_FROM_PRE_BUILT_DIR = pathlib.Path(FILE_ROOT_PATH.parent / "pre-built" / "_cmd.cpython-311-x86_64-linux-gnu.so")
   if _CMD_FROM_BUILD_DIR.exists():
     shutil.copy(
       _CMD_FROM_BUILD_DIR,
-      pathlib.Path(FILE_ROOT_PATH / "build/exe.win-amd64-3.11/lib/pymol" / "_cmd.cpython-311-x86_64-linux-gnu.so")
+      pathlib.Path(FILE_ROOT_PATH / "build/exe.linux-x86_64-3.11/lib/pymol" / "_cmd.cpython-311-x86_64-linux-gnu.so")
     )
   else:
     shutil.copy(
       _CMD_FROM_PRE_BUILT_DIR,
-      pathlib.Path(FILE_ROOT_PATH / "build/exe.win-amd64-3.11/lib/pymol" / "_cmd.cpython-311-x86_64-linux-gnu.so")
+      pathlib.Path(FILE_ROOT_PATH / "build/exe.linux-x86_64-3.11/lib/pymol" / "_cmd.cpython-311-x86_64-linux-gnu.so")
     )
-  remove_dist_info_folders(pathlib.Path(FILE_ROOT_PATH / "build/exe.win-amd64-3.11/lib"))
+  remove_dist_info_folders(pathlib.Path(FILE_ROOT_PATH / "build/exe.linux-x86_64-3.11/lib"))
   shutil.copytree(
     str(pathlib.Path(FILE_ROOT_PATH / "pymol/wizard")),
-    str(pathlib.Path(FILE_ROOT_PATH / "build/exe.win-amd64-3.11/lib/pymol/wizard")),
+    str(pathlib.Path(FILE_ROOT_PATH / "build/exe.linux-x86_64-3.11/lib/pymol/wizard")),
     dirs_exist_ok=True
   )
   shutil.copytree(
     str(pathlib.Path(FILE_ROOT_PATH / "pymol/data/startup")),
-    str(pathlib.Path(FILE_ROOT_PATH / "build/exe.win-amd64-3.11/lib/pymol/data/startup")),
+    str(pathlib.Path(FILE_ROOT_PATH / "build/exe.linux-x86_64-3.11/lib/pymol/data/startup")),
     dirs_exist_ok=True
   )

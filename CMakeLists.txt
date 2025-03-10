@@ -307,7 +307,7 @@ find_package(netCDF CONFIG REQUIRED)
 #add_library(python311 STATIC IMPORTED)
 #message(${Python3_LIBRARIES})
 #set_target_properties(python311 PROPERTIES IMPORTED_LOCATION ${Python3_LIBRARIES})
-
+target_link_options(_cmd PRIVATE -fopenmp)
 target_link_directories(_cmd PRIVATE ${CMAKE_SOURCE_DIR}/vcpkg_installed/x64-linux/lib)
 #target_link_libraries(
 #        _cmd PRIVATE

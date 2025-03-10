@@ -50,7 +50,7 @@ class BuildWinExe:
     """Sets up a temporary build environment."""
     # <editor-fold desc="Path/Filepath definitions">
     tmp_build_script_filepath = pathlib.Path(
-      PROJECT_ROOT_DIR / "bin/python", "build_linux_exe.py"
+      PROJECT_ROOT_DIR / "scripts/python", "build_linux_exe.py"
     )
     tmp_vendor_pymol_path = pathlib.Path(
       PROJECT_ROOT_DIR / "vendor/pymol-open-source"
@@ -81,7 +81,7 @@ class BuildWinExe:
     )
     # </editor-fold>
     # <editor-fold desc="Copy operations">
-    shutil.copytree(tmp_pymol_python_src_path, self.src_path)
+    shutil.copytree(tmp_pymol_python_src_path, self.src_path, dirs_exist_ok=True)
     shutil.copytree(tmp_pymol_data_path, self.pymol_data_path, dirs_exist_ok=True)
     shutil.copy(tmp_build_script_filepath, self.build_script_filepath)
     shutil.copy(tmp_pymol_license_filepath, self.license_filepath)
@@ -206,7 +206,7 @@ def main() -> None:
   install_parser.set_defaults(func=setup_dev_env)
   build_wheel_parser = subparsers.add_parser('build-wheel', help="Builds the wheel file.")
   build_wheel_parser.set_defaults(func=build_wheel)
-  build_linux_exe_parser = subparsers.add_parser('build-win-exe', help="Builds the Windows EXE file.")
+  build_linux_exe_parser = subparsers.add_parser('build-linux-exe', help="Builds the GNU Linux EXE file.")
   build_linux_exe_parser.set_defaults(func=build_linux_exe)
   clean_install_parser = subparsers.add_parser('clean-install',
                                                help="Cleans the cmake-build-setup_py diretory and then runs the pip install . command.")
